@@ -98,7 +98,9 @@ class LMEvalAdaptor(BaseLM):
                 kwargs = {"decoder_input_ids": dec_inps,}
             else:
                 kwargs = {}
-            out = self.model(inps, **kwargs)[0]
+            out = self.model(inps, **kwargs)
+            if not torch.is_tensor(out):
+                out = out[0]
             if "opt" in self.model_name:  # there are a few extra tokens in opt, which we should omit
                 return out[:, :, :50257]
             else:
