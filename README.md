@@ -1,4 +1,5 @@
-# AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration [[Paper](https://arxiv.org/abs/2306.00978)]
+# AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration 
+[[Paper](https://arxiv.org/abs/2306.00978)][[Slides](https://www.dropbox.com/scl/fi/dtnp6h6y1mnp7g036axu6/AWQ-slide.pdf?rlkey=ffgh50hxhx8dmsnjiu8kef0ou&dl=0)][[Video](https://youtu.be/3dYLj9vjfA0)]
 
 **Efficient and accurate** low-bit weight quantization (INT3/4) for LLMs, supporting **instruction-tuned** models and **multi-modal** LMs.
 
@@ -7,22 +8,26 @@
 The current release supports: 
 
 - AWQ search for accurate quantization. 
-- Pre-computed AWQ model zoo for LLMs (LLaMA-1&2, OPT, Vicuna, LLaVA; load to generate quantized weights).
+- Pre-computed AWQ model zoo for LLMs (LLaMA, Llama2, OPT, CodeLlama, StarCoder, Vicuna, LLaVA; load to generate quantized weights).
 - Memory-efficient 4-bit Linear in PyTorch.
 - Efficient CUDA kernel implementation for fast inference (support context and decoding stage).
 - Examples on 4-bit inference of an instruction-tuned model (Vicuna) and multi-modal LM (LLaVA).
 
 ![TinyChat on Orin: W4A16 is 3.2x faster than FP16](./tinychat/figures/orin_example.gif)
 
-Check out [TinyChat](tinychat), which delievers **30 tokens/second** inference performance (**3.2x faster** than FP16) for the **LLaMA-2** chatbot on the resource-constrained NVIDIA Jetson Orin! 
+Check out [TinyChat](tinychat), which delievers **30 tokens/second** inference performance (**3.2x faster** than FP16) for the **Llama2** chatbot on the resource-constrained NVIDIA Jetson Orin! 
 
 It also offers a turn-key solution for **on-device inference** of LLMs on **resource-constrained edge platforms**. With TinyChat, it is now possible to run **large** models on **small** and **low-power** devices even without Internet connection.
 
 
 ## News
+- [2023/11] 🔥 We added AWQ support and pre-computed search results for CodeLlama, StarCoder, StableCode models. Checkout our model zoo [here](https://huggingface.co/datasets/mit-han-lab/awq-model-zoo)!
+- [2023/11] 🔥 AWQ is now integrated natively in Hugging Face transformers through `from_pretrained`. You can either load quantized models from the Hub or your own HF quantized models.
+- [2023/10] AWQ is integrated into NVIDIA [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM/)
+- [2023/09] AWQ is integrated into [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/awq.md), [vLLM](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/quantization_utils/awq.py), [HuggingFace TGI](https://github.com/huggingface/text-generation-inference/pull/1054), and [LMDeploy](https://github.com/InternLM/lmdeploy). 
 - [2023/09] ⚡ Check out our latest [**TinyChat**](tinychat), which is ~2x faster than the first release on Orin!
 - [2023/09] ⚡ Check out [**AutoAWQ**](https://github.com/casper-hansen/AutoAWQ), a third-party implementation to make AWQ easier to expand to new models, improve inference speed, and integrate into Huggingface.
-- [2023/07] 🔥 We released **TinyChat**, an efficient and lightweight chatbot interface based on AWQ. TinyChat enables efficient LLM inference on both cloud and edge GPUs. LLama-2-chat models are supported! Check out our implementation [here](tinychat).
+- [2023/07] 🔥 We released **TinyChat**, an efficient and lightweight chatbot interface based on AWQ. TinyChat enables efficient LLM inference on both cloud and edge GPUs. Llama-2-chat models are supported! Check out our implementation [here](tinychat).
 - [2023/07] 🔥 We added AWQ support and pre-computed search results for Llama-2 models (7B & 13B). Checkout our model zoo [here](https://huggingface.co/datasets/mit-han-lab/awq-model-zoo)!
 - [2023/07] We extended the support for more LLM models including MPT, Falcon, and BLOOM. 
 
@@ -53,8 +58,9 @@ pip install -e .
 * For **edge devices** like Orin, before running the commands above, please:
 
     1. Modify [pyproject.toml](pyproject.toml) by commenting out [this line](https://github.com/mit-han-lab/llm-awq/blob/3fce69061682fdd528824e5da3d03a8a8b545f2a/pyproject.toml#L17).
-    2. Manually install precompiled PyTorch binaries (>=2.0.0) from [NVIDIA](https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048).
-    3. Set the appropriate Python version for conda environment (e.g., `conda create -n awq python=3.8 -y` for JetPack 5).
+    2. Set [this line](https://github.com/mit-han-lab/llm-awq/blob/3fce69061682fdd528824e5da3d03a8a8b545f2a/pyproject.toml#18) to transformers==4.32.0.
+    3. Manually install precompiled PyTorch binaries (>=2.0.0) from [NVIDIA](https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048).
+    4. Set the appropriate Python version for conda environment (e.g., `conda create -n awq python=3.8 -y` for JetPack 5).
   
 3. Install efficient W4A16 (4-bit weight, 16-bit activation) CUDA kernel and optimized FP16 kernels (e.g. layernorm, positional encodings).
 ```
@@ -75,9 +81,11 @@ The detailed support list:
 
 | Models | Sizes                       | INT4-g128 | INT3-g128 |
 | ------ | --------------------------- | --------- | --------- |
-| LLaMA-2  | 7B/7B-chat/13B/13B-chat   | ✅         | ✅        |
-| LLaMA  | 7B/13B/30B/65B              | ✅         | ✅        |
-| OPT    | 125m/1.3B/2.7B/6.7B/13B/30B | ✅         | ✅        |
+| [Llama2](/scripts/llama_example.sh)  | 7B/13B/70B  | ✅         | ✅        |
+| [LLaMA](/scripts/llama_example.sh)  | 7B/13B/30B/65B              | ✅         | ✅        |
+| [OPT](/scripts/opt_example.sh)    | 125m/1.3B/2.7B/6.7B/13B/30B | ✅         | ✅        |
+| CodeLlama | 7B/13B/34B               | ✅         | ✅        |
+| StarCoder | 15.5B                    | ✅         | ✅        |
 | Vicuna-v1.1 | 7B/13B                 | ✅         |           |
 | LLaVA-v0 | 13B                       | ✅         |           |
 
